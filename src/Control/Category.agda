@@ -69,11 +69,14 @@ record IsCategory {o h} {Obj : Set o} (_⇒_ : Obj → Obj → Set h) : Set (o �
 record Category o h : Set (suc (o ⊔ h)) where
    field
      {Obj}      : Set o
-     Mor        : Obj → Obj → Set h
-     isCategory : IsCategory Mor
-
+     _⇒_        : Obj → Obj → Set h
+     isCategory : IsCategory _⇒_
+{-
+   obj   = Obj
+   Hom   = _⇒_
+   _▹_⇒_ = _⇒_
+-}
    open IsCategory isCategory public
-
 
 -- Initial object
 
@@ -88,3 +91,4 @@ record IsFinal {o h} {Obj : Set o} (_⇒_ : Obj → Obj → Set h) (Final : Obj)
   field
     final           : ∀ {A}                 → A ⇒ Final
     final-universal : ∀ {A} {f : A ⇒ Final} → f ≡ final
+
