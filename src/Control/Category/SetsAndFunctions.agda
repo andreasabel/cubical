@@ -57,7 +57,7 @@ pairPair : {A B C : Set} (f : C → A) (g : C → B) →
 pairPair f g = record
   { ⟨f,g⟩  = ⟨ f , g ⟩
   ; isPair = pairIsPair f g
-  ; unique =  λ {h} p → fun-ext (λ x → cong₂ (λ f g → f x , g x) (β-fst p) (β-snd p))
+  ; unique =  λ p → fun-ext (λ x → cong₂ (λ f g → f x , g x) (β-fst p) (β-snd p))
   }
 
 timesIsProduct : (A B : Set) → Product SET A B

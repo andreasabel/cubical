@@ -83,3 +83,10 @@ record IsProduct {o h} (C : Category o h) (A B A×B : Obj C) : Set (h ⊔ o) whe
     β-snd : ∀ {X} {f : X ⇒ A} {g : X ⇒ B} → fst ∘ pair f g ≡ f
 
 -}
+
+-- Category with Products
+
+HasProducts : ∀ {o h} (C : Category o h) → Set (o ⊔ h)
+HasProducts C = ∀ (A B : obj C) → Product C A B
+
+
