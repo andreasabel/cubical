@@ -108,8 +108,24 @@ module _  {o h e} (C : Category o h e) (Tgt : obj C) where
 
   open IsFinal
 
-  idIsTerminalSlice : IsFinal Hom terminalSlice
-  final           idIsTerminalSlice {sliceObj Src f}
+  isTerminalSlice : IsFinal Hom terminalSlice
+  final           isTerminalSlice {sliceObj Src f}
     = sliceMorphism f C.id-last
-  final-universal idIsTerminalSlice {sliceObj Src f} {sliceMorphism g tri}
+  final-universal isTerminalSlice {sliceObj Src f} {sliceMorphism g tri}
     = C.≈-trans (C.≈-sym C.id-last) tri
+
+-- The initial object in C / Tgt is (0, initial)
+
+  module _ {⊥ : obj C} (⊥-initial : IsInitial C.Hom ⊥) where
+
+    open IsInitial ⊥-initial
+      renaming (initial to abort; initial-universal to abort-unique)
+
+    initialSlice : Obj
+    initialSlice = record { Src = ⊥; out = abort }
+
+    open IsInitial
+
+    isInitialSlice : IsInitial Hom initialSlice
+    initial           isInitialSlice = sliceMorphism abort abort-unique
+    initial-universal isInitialSlice = abort-unique
