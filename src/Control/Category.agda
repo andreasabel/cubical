@@ -1,20 +1,30 @@
 module Control.Category where
 
 open import Level using (suc; _⊔_)
+open import Relation.Binary hiding (_⇒_)
 open import Relation.Binary.PropositionalEquality
 
 -- Category operations: identity and composition.
 
-module T-CategoryOps {o h} {Obj : Set o} (_⇒_ : Obj → Obj → Set h) where
+module T-CategoryOps {o h e} {Obj : Set o} (Hom : Obj → Obj → Setoid h e) where
+
+  _⇒_ : (A B : Obj) → Set h
+  A ⇒ B = Setoid.Carrier (Hom A B)
+
+  _≈_ : {A B : Obj} → Rel (A ⇒ B) e
+  _≈_ {A = A}{B = B} = Setoid._≈_ (Hom A B)
+
+  T-equiv : {A B : Obj} → IsEquivalence (Setoid._≈_ (Hom A B))
+  T-equiv {A = A}{B = B} = Setoid.isEquivalence (Hom A B)
 
   T-id = ∀ {A}                            → A ⇒ A
   T-⟫  = ∀ {A B C} (f : A ⇒ B) (g : B ⇒ C) → A ⇒ C
   T-∘  = ∀ {A B C} (g : B ⇒ C) (f : A ⇒ B) → A ⇒ C
 
-record CategoryOps {o h} {Obj : Set o} (_⇒_ : Obj → Obj → Set h)
-    : Set (o ⊔ h)
+record CategoryOps {o h e} {Obj : Set o} (Hom : Obj → Obj → Setoid h e)
+    : Set (o ⊔ h ⊔ e)
   where
-  open T-CategoryOps _⇒_
+  open T-CategoryOps Hom
 
   infixl 9 _⟫_
   infixr 9 _∘_
@@ -28,25 +38,29 @@ record CategoryOps {o h} {Obj : Set o} (_⇒_ : Obj → Obj → Set h)
 
 -- Category laws: left and right identity and composition.
 
-module T-CategoryLaws {o h} {Obj : Set o} {_⇒_ : Obj → Obj → Set h}
-    (ops : CategoryOps _⇒_)
+module T-CategoryLaws {o h e} {Obj : Set o} {Hom : Obj → Obj → Setoid h e}
+    (ops : CategoryOps Hom)
   where
+  open T-CategoryOps Hom public
   open CategoryOps ops public
 
   T-id-first = ∀ {A B} {g : A ⇒ B} →
 
-    id ⟫ g ≡ g
+    (id ⟫ g) ≈ g
 
   T-id-last  = ∀ {A B} {f : A ⇒ B} →
 
-    f ⟫ id ≡ f
+    (f ⟫ id) ≈ f
 
   T-∘-assoc  = ∀ {A B C D} (f : A ⇒ B) {g : B ⇒ C} {h : C ⇒ D} →
 
-    (f ⟫ g) ⟫ h ≡ f ⟫ (g ⟫ h)
+    ((f ⟫ g) ⟫ h) ≈ (f ⟫ (g ⟫ h))
 
-record CategoryLaws {o h} {Obj : Set o} {_⇒_ : Obj → Obj → Set h}
-    (ops : CategoryOps _⇒_) : Set (o ⊔ h)
+  T-∘-cong = ∀ {A B C} {f f′ : A ⇒ B} {g g′ : B ⇒ C} →
+    f ≈ f′ → g ≈ g′ → (f ⟫ g) ≈ (f′ ⟫ g′)
+
+record CategoryLaws {o h e} {Obj : Set o} {Hom : Obj → Obj → Setoid h e}
+    (ops : CategoryOps Hom) : Set (o ⊔ h ⊔ e)
   where
   open T-CategoryLaws ops
 
@@ -54,11 +68,12 @@ record CategoryLaws {o h} {Obj : Set o} {_⇒_ : Obj → Obj → Set h}
     id-first : T-id-first
     id-last  : T-id-last
     ∘-assoc  : T-∘-assoc
+    ∘-cong   : T-∘-cong
 
-record IsCategory {o h} {Obj : Set o} (_⇒_ : Obj → Obj → Set h) : Set (o ⊔ h) where
+record IsCategory {o h e} {Obj : Set o} (Hom : Obj → Obj → Setoid h e) : Set (o ⊔ h ⊔ e) where
 
   field
-    ops  : CategoryOps _⇒_
+    ops  : CategoryOps Hom
     laws : CategoryLaws ops
 
   open CategoryOps  ops  public
@@ -66,29 +81,28 @@ record IsCategory {o h} {Obj : Set o} (_⇒_ : Obj → Obj → Set h) : Set (o �
 
 -- The category: packaging objects, morphisms, and laws.
 
-record Category o h : Set (suc (o ⊔ h)) where
+record Category o h e : Set (suc (o ⊔ h ⊔ e)) where
    field
      {Obj}      : Set o
-     _⇒_        : Obj → Obj → Set h
-     isCategory : IsCategory _⇒_
-{-
-   obj   = Obj
-   Hom   = _⇒_
-   _▹_⇒_ = _⇒_
--}
+     Hom        : Obj → Obj → Setoid h e
+     isCategory : IsCategory Hom
+
    open IsCategory isCategory public
 
 -- Initial object
 
-record IsInitial {o h} {Obj : Set o} (_⇒_ : Obj → Obj → Set h) (Initial : Obj) : Set (h ⊔ o) where
+record IsInitial {o h e} {Obj : Set o} (Hom : Obj → Obj → Setoid h e) (Initial : Obj) : Set (h ⊔ o ⊔ e) where
+  open T-CategoryOps Hom
   field
     initial           : ∀ {A}                   → Initial ⇒ A
-    initial-universal : ∀ {A} {f : Initial ⇒ A} → f ≡ initial
+    initial-universal : ∀ {A} {f : Initial ⇒ A} → f ≈ initial
 
 -- Terminal object
 
-record IsFinal {o h} {Obj : Set o} (_⇒_ : Obj → Obj → Set h) (Final : Obj) : Set (h ⊔ o) where
+record IsFinal {o h e} {Obj : Set o} (Hom : Obj → Obj → Setoid h e) (Final : Obj) : Set (h ⊔ o ⊔ e) where
+  open T-CategoryOps Hom
   field
     final           : ∀ {A}                 → A ⇒ Final
-    final-universal : ∀ {A} {f : A ⇒ Final} → f ≡ final
+    final-universal : ∀ {A} {f : A ⇒ Final} → f ≈ final
+
 
