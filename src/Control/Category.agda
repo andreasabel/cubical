@@ -4,9 +4,7 @@ open import Level using (suc; _⊔_)
 open import Relation.Binary hiding (_⇒_)
 open import Relation.Binary.PropositionalEquality
 
--- Category operations: identity and composition.
-
-module T-CategoryOps {o h e} {Obj : Set o} (Hom : Obj → Obj → Setoid h e) where
+module HomSet {o h e} {Obj : Set o} (Hom : Obj → Obj → Setoid h e) where
 
   _⇒_ : (A B : Obj) → Set h
   A ⇒ B = Setoid.Carrier (Hom A B)
@@ -14,8 +12,23 @@ module T-CategoryOps {o h e} {Obj : Set o} (Hom : Obj → Obj → Setoid h e) wh
   _≈_ : {A B : Obj} → Rel (A ⇒ B) e
   _≈_ {A = A}{B = B} = Setoid._≈_ (Hom A B)
 
-  T-equiv : {A B : Obj} → IsEquivalence (Setoid._≈_ (Hom A B))
-  T-equiv {A = A}{B = B} = Setoid.isEquivalence (Hom A B)
+  ≈-equiv : {A B : Obj}  → IsEquivalence (Setoid._≈_ (Hom A B))
+  ≈-equiv {A = A}{B = B} = Setoid.isEquivalence (Hom A B)
+
+  ≈-refl  : {A B : Obj}  → Reflexive _≈_
+  ≈-refl  {A = A}{B = B} = Setoid.refl (Hom A B)
+
+  ≈-sym   : {A B : Obj}  → Symmetric _≈_
+  ≈-sym   {A = A}{B = B} = Setoid.sym (Hom A B)
+
+  ≈-trans : {A B : Obj}  → Transitive _≈_
+  ≈-trans {A = A}{B = B} = Setoid.trans (Hom A B)
+
+-- Category operations: identity and composition.
+
+module T-CategoryOps {o h e} {Obj : Set o} (Hom : Obj → Obj → Setoid h e) where
+
+  open HomSet Hom
 
   T-id = ∀ {A}                            → A ⇒ A
   T-⟫  = ∀ {A B C} (f : A ⇒ B) (g : B ⇒ C) → A ⇒ C
@@ -41,6 +54,7 @@ record CategoryOps {o h e} {Obj : Set o} (Hom : Obj → Obj → Setoid h e)
 module T-CategoryLaws {o h e} {Obj : Set o} {Hom : Obj → Obj → Setoid h e}
     (ops : CategoryOps Hom)
   where
+  open HomSet Hom public
   open T-CategoryOps Hom public
   open CategoryOps ops public
 
@@ -76,7 +90,8 @@ record IsCategory {o h e} {Obj : Set o} (Hom : Obj → Obj → Setoid h e) : Set
     ops  : CategoryOps Hom
     laws : CategoryLaws ops
 
-  open CategoryOps  ops  public
+  open HomSet        Hom public
+  open CategoryOps   ops public
   open CategoryLaws laws public
 
 -- The category: packaging objects, morphisms, and laws.
@@ -92,6 +107,7 @@ record Category o h e : Set (suc (o ⊔ h ⊔ e)) where
 -- Initial object
 
 record IsInitial {o h e} {Obj : Set o} (Hom : Obj → Obj → Setoid h e) (Initial : Obj) : Set (h ⊔ o ⊔ e) where
+  open HomSet Hom
   open T-CategoryOps Hom
   field
     initial           : ∀ {A}                   → Initial ⇒ A
@@ -100,6 +116,7 @@ record IsInitial {o h e} {Obj : Set o} (Hom : Obj → Obj → Setoid h e) (Initi
 -- Terminal object
 
 record IsFinal {o h e} {Obj : Set o} (Hom : Obj → Obj → Setoid h e) (Final : Obj) : Set (h ⊔ o ⊔ e) where
+  open HomSet Hom
   open T-CategoryOps Hom
   field
     final           : ∀ {A}                 → A ⇒ Final
