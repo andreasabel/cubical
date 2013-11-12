@@ -3,8 +3,7 @@
 module Control.Category.Product where
 
 open import Level using (suc; _⊔_)
-open import Relation.Binary.PropositionalEquality
-open ≡-Reasoning
+open import Relation.Binary hiding (_⇒_)
 
 open import Control.Category
 open Category using () renaming (Obj to obj; _⇒_ to _▹_⇒_)
@@ -15,8 +14,9 @@ open Category using () renaming (Obj to obj; _⇒_ to _▹_⇒_)
 -- whose objects are triples of an object A×B in C that has
 -- morphisms fst, snd to A and B.
 -- We call such a triple a pre-product of A and B.
+-- Alternatively, it could be called a bislice.
 
-record PreProductObj {o h} (C : Category o h) (A B : obj C) : Set (o ⊔ h)where
+record PreProductObj {o h e} (C : Category o h e) (A B : obj C) : Set (o ⊔ h ⊔ e) where
   open Category C -- public
   field
     A×B : Obj
@@ -25,10 +25,10 @@ record PreProductObj {o h} (C : Category o h) (A B : obj C) : Set (o ⊔ h)where
 
 -- In the following, we fix a category C and two objects A and B.
 
-module PreProduct {o h} {C : Category o h} {A B : obj C} where
+module PreProduct {o h e} {C : Category o h e} {A B : obj C} where
 
   -- We use _⇒_ for C's morphisms and _∘_ for their composition.
-  open module C = Category C using (_⇒_; _⟫_; _∘_)
+  open module C = Category C using (_⇒_; _⟫_; _∘_; _≈_; ≈-refl; ≈-sym; ≈-trans; ∘-cong)
 
   -- We consider only pre-products of A and B.
   Obj = PreProductObj C A B
@@ -41,16 +41,16 @@ module PreProduct {o h} {C : Category o h} {A B : obj C} where
   -- and snd ∘ ⟨f,g⟩ ≡ g.
 
   record IsPair (P : Obj) {X} (f : X ⇒ A) (g : X ⇒ B) (⟨f,g⟩ : X ⇒ A×B◃ P)
-      : Set (o ⊔ h)
+      : Set (o ⊔ h ⊔ e)
     where
     constructor β-pair
 
     open PreProductObj P using (fst; snd)
     field
-      .β-fst : fst ∘ ⟨f,g⟩ ≡ f
-      .β-snd : snd ∘ ⟨f,g⟩ ≡ g
+      β-fst : (fst ∘ ⟨f,g⟩) ≈ f
+      β-snd : (snd ∘ ⟨f,g⟩) ≈ g
 
-  record PreProductMorphism (O P : Obj) : Set (o ⊔ h)
+  record PreProductMorphism (O P : Obj) : Set (o ⊔ h ⊔ e)
     where
     constructor pair
 
@@ -58,7 +58,7 @@ module PreProduct {o h} {C : Category o h} {A B : obj C} where
     open PreProductObj P
     field
       ⟨f,g⟩   : X ⇒ A×B
-      .isPair : IsPair P f g ⟨f,g⟩
+      isPair : IsPair P f g ⟨f,g⟩
     open IsPair isPair public
 
   open PreProductMorphism using (isPair)
@@ -83,74 +83,41 @@ module PreProduct {o h} {C : Category o h} {A B : obj C} where
   comp (pair o (β-pair o-fst o-snd)) (pair p (β-pair p-fst p-snd)) = record
     { ⟨f,g⟩ = o ⟫ p
     ; isPair = record
-      { β-fst = trans (C.∘-assoc o) (trans (cong (_⟫_ o) p-fst) o-fst)
-      ; β-snd = trans (C.∘-assoc o) (trans (cong (_⟫_ o) p-snd) o-snd)
+      { β-fst = ≈-trans (C.∘-assoc o) (≈-trans (∘-cong ≈-refl p-fst) o-fst)
+      ; β-snd = ≈-trans (C.∘-assoc o) (≈-trans (∘-cong ≈-refl p-snd) o-snd)
       }
     }
 
-  ops : CategoryOps (_⇉_)
-  ops = record { id = id ; _⟫_ = comp}
+  -- Thus, we have a category of PreProducts, inheriting the laws from C.
 
-  open T-CategoryLaws ops using (T-id-first; T-id-last; T-∘-assoc)
+  PreProductHom : (O P : Obj) → Setoid _ _
+  PreProductHom O P = record
+    { Carrier       = PreProductMorphism O P
+    ; _≈_           = λ h i → PreProductMorphism.⟨f,g⟩ h ≈ PreProductMorphism.⟨f,g⟩ i
+    ; isEquivalence = record
+      { refl  = ≈-refl
+      ; sym   = ≈-sym
+      ; trans = ≈-trans
+      }
+    }
 
-  .id-first : T-id-first
-  id-first {A = P} {B = Q} {g = pair p β} = {!C.id-first!} -- rewrite C.id-first = ?
-
-{-
-  .id-first : T-id-first
-  id-first {A = P} {B = Q} {g = pair p β} = begin
-      comp id (pair p β)
-{-
-    ≡⟨⟩
-      pair (C.id ⟫ p) (β-pair
-        (trans (C.∘-assoc C.id) (trans (cong (_⟫_ C.id) p-fst) C.id-first))
-        (trans (C.∘-assoc C.id) (trans (cong (_⟫_ C.id) p-snd) C.id-first)))
--}
-    ≡⟨ cong (λ z → pair z (β-pair {!!} {!!})) C.id-first ⟩
-      pair p β
-    ∎
--}
-
-
-{-
-  .id-first : T-id-first
-  id-first {A = P} {B = Q} {g = pair p (β-pair p-fst p-snd)} = begin
-      comp id (pair p (β-pair p-fst p-snd))
-    ≡⟨⟩
-      pair (C.id ⟫ p) (β-pair
-        (trans (C.∘-assoc C.id) (trans (cong (_⟫_ C.id) p-fst) C.id-first))
-        (trans (C.∘-assoc C.id) (trans (cong (_⟫_ C.id) p-snd) C.id-first)))
-    ≡⟨ cong (λ z → pair z (β-pair {!p-fst!} {!!})) C.id-first ⟩
-      pair p (β-pair p-fst p-snd)
-    ∎
--}
-{-
-  id-last : ∀ {O P} (f : O ⇉ P) → comp f id ≡ f
-  id-last (pair p β) with p ⟫ C.id
-  ... | r = ?
--}
-
-
-  .id-last : ∀ {O P} (f : O ⇉ P) → comp f id ≡ f
-  id-last (pair p β) = begin
-      comp (pair p β) id
-    ≡⟨ cong (λ z → pair z {! isPair (comp (pair p β) id)!}) C.id-last ⟩
-      pair p β
-    ∎
-
-  preProductIsCategory : IsCategory PreProductMorphism
+  preProductIsCategory : IsCategory PreProductHom
   preProductIsCategory = record
-    { ops = ops
+    { ops = record
+      { id = id
+      ; _⟫_ = comp
+      }
     ; laws = record
-      { id-first = {!!} -- id-first
-      ; id-last = {!!}
-      ; ∘-assoc = {!!}
+      { id-first = C.id-first
+      ; id-last  = C.id-last
+      ; ∘-assoc  = λ f → C.∘-assoc _
+      ; ∘-cong   = C.∘-cong
       }
     }
-
 
 open PreProduct public
 
+{-
 record Pair {o h} {C : Category o h} {A B} (P : PreProductObj C A B)
     {X} (f : C ▹ X ⇒ A) (g : C ▹ X ⇒ B) : Set (h ⊔ o)
   where
@@ -158,7 +125,7 @@ record Pair {o h} {C : Category o h} {A B} (P : PreProductObj C A B)
   field
     ⟨f,g⟩  : C ▹ X ⇒ A×B
     isPair : IsPair P f g ⟨f,g⟩
-    unique : ∀ {h} → IsPair P f g h → h ≡ ⟨f,g⟩
+    unique : ∀ {h} → IsPair P f g h → h ≈ ⟨f,g⟩
 
   open IsPair isPair public
 
@@ -197,3 +164,5 @@ HasProducts C = ∀ (A B : obj C) → Product C A B
 
 
 
+
+-}

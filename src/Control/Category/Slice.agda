@@ -129,3 +129,4 @@ module _  {o h e} (C : Category o h e) (Tgt : obj C) where
     isInitialSlice : IsInitial Hom initialSlice
     initial           isInitialSlice = sliceMorphism abort abort-unique
     initial-universal isInitialSlice = abort-unique
+

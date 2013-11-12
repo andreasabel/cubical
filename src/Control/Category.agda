@@ -15,6 +15,8 @@ module HomSet {o h e} {Obj : Set o} (Hom : Obj → Obj → Setoid h e) where
   ≈-equiv : {A B : Obj}  → IsEquivalence (Setoid._≈_ (Hom A B))
   ≈-equiv {A = A}{B = B} = Setoid.isEquivalence (Hom A B)
 
+--  module _ {A B : Obj}
+
   ≈-refl  : {A B : Obj}  → Reflexive _≈_
   ≈-refl  {A = A}{B = B} = Setoid.refl (Hom A B)
 
@@ -121,5 +123,4 @@ record IsFinal {o h e} {Obj : Set o} (Hom : Obj → Obj → Setoid h e) (Final :
   field
     final           : ∀ {A}                 → A ⇒ Final
     final-universal : ∀ {A} {f : A ⇒ Final} → f ≈ final
-
 
