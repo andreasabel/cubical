@@ -9,13 +9,20 @@ module HomSet {o h e} {Obj : Set o} (Hom : Obj → Obj → Setoid h e) where
   _⇒_ : (A B : Obj) → Set h
   A ⇒ B = Setoid.Carrier (Hom A B)
 
+  module _ {A B : Obj} where
+    open Setoid (Hom A B) public
+      using (_≈_)
+      renaming ( isEquivalence to ≈-equiv
+               ; refl          to ≈-refl
+               ; sym           to ≈-sym
+               ; trans         to ≈-trans
+               )
+{-
   _≈_ : {A B : Obj} → Rel (A ⇒ B) e
   _≈_ {A = A}{B = B} = Setoid._≈_ (Hom A B)
 
   ≈-equiv : {A B : Obj}  → IsEquivalence (Setoid._≈_ (Hom A B))
   ≈-equiv {A = A}{B = B} = Setoid.isEquivalence (Hom A B)
-
---  module _ {A B : Obj}
 
   ≈-refl  : {A B : Obj}  → Reflexive _≈_
   ≈-refl  {A = A}{B = B} = Setoid.refl (Hom A B)
@@ -25,6 +32,7 @@ module HomSet {o h e} {Obj : Set o} (Hom : Obj → Obj → Setoid h e) where
 
   ≈-trans : {A B : Obj}  → Transitive _≈_
   ≈-trans {A = A}{B = B} = Setoid.trans (Hom A B)
+-}
 
 -- Category operations: identity and composition.
 
