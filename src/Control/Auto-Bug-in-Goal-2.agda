@@ -2,7 +2,7 @@
 
 -- One-place functors (decorations) on Set
 
-module Control.Decoration where
+module Control.Auto-Bug-in-Goal-2 where
 
 open import Function using (id)
 open import Relation.Binary.PropositionalEquality
