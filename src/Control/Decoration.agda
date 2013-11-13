@@ -74,29 +74,20 @@ traverse-∘ (d • e) F G {f = f} {g = g} =
 -- The instance.
 
 decoration : ∀ {A} → IsDecoration (_×_ A)
--- traverse decoration F f (a , x) = map F (_,_ a) (f x)   -- BUG WITH record pattern trans!!
-traverse decoration F f ax = map F (_,_ (proj₁ ax)) (f (proj₂ ax))
+-- traverse decoration F f (a , x) = map F (_,_ a) (f x)           -- FAILS BUG WITH record pattern trans!!
+traverse decoration F f ax = map F (_,_ (proj₁ ax)) (f (proj₂ ax)) -- WORKS
 traverse-id decoration = refl
 traverse-∘  decoration F G {f = f} {g = g} = fun-ext λ ax → let (a , x) = ax in
   begin
-    traverse decoration FG (map F g ∘ f) (a , x)
-  ≡⟨⟩
-    map FG (_,_ a) (map F g (f x))
-  ≡⟨⟩
-    map F (map G (_,_ a)) (map F g (f x))
-  ≡⟨ {!map-∘ F!}  ⟩
-    map F (map G (_,_ a) ∘ g) (f x)
-  ≡⟨⟩
-    map F (λ y → map G (_,_ a) (g y)) (f x)
-  ≡⟨⟩
-    map F (λ y → traverse decoration G g (a , y)) (f x)
-  ≡⟨⟩
-    map F (traverse decoration G g ∘ (_,_ a)) (f x)
-  ≡⟨ {! sym (map-∘ F) !}⟩
-    map F (traverse decoration G g) (map F (_,_ a) (f x))
-  ≡⟨⟩
-    map F (traverse decoration G g) (traverse decoration F f (a , x))
-  ≡⟨⟩
+    traverse decoration FG (map F g ∘ f) (a , x)                        ≡⟨⟩
+    map FG (_,_ a) (map F g (f x))                                      ≡⟨⟩
+    map F (map G (_,_ a)) (map F g (f x))                               ≡⟨ cong (λ z → z _) (sym (map-∘ F))  ⟩
+    map F (map G (_,_ a) ∘ g) (f x)                                     ≡⟨⟩
+    map F (λ y → map G (_,_ a) (g y)) (f x)                             ≡⟨⟩
+    map F (λ y → traverse decoration G g (a , y)) (f x)                 ≡⟨⟩
+    map F (traverse decoration G g ∘ (_,_ a)) (f x)                     ≡⟨ cong (λ z → z _) (map-∘ F) ⟩
+    map F (traverse decoration G g) (map F (_,_ a) (f x))               ≡⟨⟩
+    map F (traverse decoration G g) (traverse decoration F f (a , x))   ≡⟨⟩
     (map F (traverse decoration G g) ∘ traverse decoration F f) (a , x)
   ∎
   where FG = F · G
