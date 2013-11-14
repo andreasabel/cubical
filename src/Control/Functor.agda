@@ -94,6 +94,17 @@ compIsFunctor f g = record
         F.map (G.map i) ∘ F.map (G.map h)
       ∎
 
+-- The constant functor.
+
+Const : ∀ A → IsFunctor (λ _ → A)
+Const A = record
+  { ops  = record { map = λ f x → x }
+  ; laws = record { map-id = refl ; map-∘ = refl }
+  }
+
+
+
+
 {- STILL NOT SOPHISTICATED ENOUGH
 
 -- Operations of a functor.

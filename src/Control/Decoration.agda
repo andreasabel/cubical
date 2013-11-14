@@ -38,6 +38,83 @@ record IsDecoration (D : Set → Set) : Set₁ where
                      }
     }
 
+  open IsFunctor isFunctor using () renaming (map to dmap; map-∘ to dmap-∘)
+
+  -- Constant traversal.
+
+  traverse-c :  ∀ {A C} (c : C) (l : D A) → C
+  traverse-c {C = C} c = traverse (Const C) {B = C} (λ _ → c)
+
+  -- Holds by parametricity (since type C is arbitrary and there is just one c : C given).
+
+  traverse-const : ∀ {A B C} {c : C} (l : D A) →
+
+      traverse (Const C) {B = B} (λ _ → c) l ≡ c
+
+  traverse-const {A = A} {B = B} {C = C} {c = c} l =
+    begin
+      traverse (Const C) {B = B} (λ _ → c) l ≡⟨ {!!} ⟩
+      c
+    ∎
+
+
+   -- Lens structure.  -- TODO: define Contol.Lens
+
+  get : ∀ {A} → D A → A
+  get {A = A} = traverse (Const A) {B = A} id
+
+  set : ∀ {A B} → B → D A → D B
+  set b = dmap (λ _ → b)
+
+  -- Lens laws.
+
+  -- 1. Get what you set.
+
+  get-set : ∀ {A} {a : A} (l : D A) →
+
+      get (set a l) ≡ a
+
+  get-set {A = A} {a = a} l =
+    begin
+      get (set a l)                                               ≡⟨⟩
+      get (dmap (λ _ → a) l)                                      ≡⟨⟩
+      traverse (Const A) id (traverse Id (λ _ → a) l)             ≡⟨⟩
+      (map Id (traverse (Const A) id) ∘ traverse Id (λ _ → a)) l  ≡⟨  cong (λ z → z _) (sym (traverse-∘ Id (Const A)))  ⟩
+      traverse (Id · Const A) (map Id id ∘ (λ _ → a)) l           ≡⟨⟩
+      traverse (Const A) (λ _ → a) l                              ≡⟨ traverse-const _ ⟩
+      a
+    ∎
+
+  -- 2. Set what you got.
+
+  set-get : ∀ {A} (l : D A) →
+
+      set (get l) l ≡ l
+
+  set-get {A = A} l =
+    begin
+
+      set (get l) l               ≡⟨⟩
+      dmap (λ _ → get l) l        ≡⟨⟩
+      traverse Id (λ _ → get l) l ≡⟨ {!!} ⟩
+      l
+    ∎
+
+  -- 3. Set twice is set once.
+
+  set-set : ∀ {A} (a b : A) (l : D A) →
+
+    set a (set b l) ≡ set a l
+
+  set-set a b l =
+    begin
+      set a (set b l)                      ≡⟨⟩
+      (dmap (λ _ → a) ∘ dmap (λ _ → b)) l  ≡⟨ cong (λ z → z l) (sym dmap-∘)  ⟩
+      dmap ((λ _ → a) ∘ (λ _ → b)) l       ≡⟨⟩
+      dmap (λ _ → a) l                     ≡⟨⟩
+      set a l
+    ∎
+
 open IsDecoration
 
 -- Identity decoration.
