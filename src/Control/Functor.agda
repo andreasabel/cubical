@@ -60,6 +60,14 @@ record IsFunctor (F : Set → Set) : Set₁ where
   open FunctorOps  ops  public
   open FunctorLaws laws public
 
+record Functor : Set₁ where
+  constructor functor
+  field
+    F  : Set → Set
+    F! : IsFunctor F
+
+  open IsFunctor F! public
+
 -- Id is a functor.
 
 idIsFunctor : IsFunctor (λ A → A)
@@ -67,6 +75,9 @@ idIsFunctor = record
   { ops  = record { map = λ f → f }
   ; laws = record { map-id = refl ; map-∘ = refl }
   }
+
+Id : Functor
+Id = record { F = λ A → A ; F! = idIsFunctor }
 
 -- Functors compose.
 
@@ -94,13 +105,19 @@ compIsFunctor f g = record
         F.map (G.map i) ∘ F.map (G.map h)
       ∎
 
+Comp : Functor → Functor → Functor
+Comp (functor F F!) (functor G G!) = functor (λ A → F (G A)) (compIsFunctor F! G!)
+
 -- The constant functor.
 
-Const : ∀ A → IsFunctor (λ _ → A)
-Const A = record
+constIsFunctor : ∀ A → IsFunctor (λ _ → A)
+constIsFunctor A = record
   { ops  = record { map = λ f x → x }
   ; laws = record { map-id = refl ; map-∘ = refl }
   }
+
+Const : (A : Set) → Functor
+Const A = functor (λ _ → A) (constIsFunctor A)
 
 
 

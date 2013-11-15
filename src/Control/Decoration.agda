@@ -1,4 +1,5 @@
 {-# OPTIONS --copatterns #-}
+{-# OPTIONS --show-implicit #-}
 
 -- One-place functors (decorations) on Set
 
@@ -10,7 +11,8 @@ open import Relation.Binary.PropositionalEquality
 open ≡-Reasoning
 
 open import Axiom.FunctionExtensionality
-open import Control.Functor renaming (idIsFunctor to Id; compIsFunctor to _·_)
+open import Control.Functor hiding (Id; Const) renaming (idIsFunctor to Id; compIsFunctor to _·_; constIsFunctor to Const)
+open import Control.Functor.NaturalTransformation using (IsNatTrans; KKNat)
 
 open IsFunctor -- {{...}} LOOPS
 
@@ -20,9 +22,22 @@ record IsDecoration (D : Set → Set) : Set₁ where
 
         (A → F B) → D A → F (D B)
 
+    -- The free theorem for traverse:
+    -- A natural transformation after a traversal can be combined with the traversal.
+
+    traverse-free : ∀ {F} (F! : IsFunctor F) {G} (G! : IsFunctor G) →
+      ∀ (η : ∀ {A} → F A → G A) (η! : IsNatTrans (functor F F!) (functor G G!) η) →
+      ∀ {A B} (f : A → F B) →
+
+        η ∘ traverse F! f ≡ traverse G! (η ∘ f)
+
+    -- Identity traversal.
+
     traverse-id : ∀ {A} →
 
         traverse Id {A = A} id ≡ id
+
+    -- Distributing a traversal.
 
     traverse-∘  :
       ∀ {F G} (F! : IsFunctor F) (G! : IsFunctor G) →
@@ -40,31 +55,49 @@ record IsDecoration (D : Set → Set) : Set₁ where
 
   open IsFunctor isFunctor using () renaming (map to dmap; map-∘ to dmap-∘)
 
-  -- Constant traversal.
-
-  traverse-c :  ∀ {A C} (c : C) (l : D A) → C
-  traverse-c {C = C} c = traverse (Const C) {B = C} (λ _ → c)
-
-  -- Holds by parametricity (since type C is arbitrary and there is just one c : C given).
-
-  traverse-const : ∀ {A B C} {c : C} (l : D A) →
-
-      traverse (Const C) {B = B} (λ _ → c) l ≡ c
-
-  traverse-const {A = A} {B = B} {C = C} {c = c} l =
-    begin
-      traverse (Const C) {B = B} (λ _ → c) l ≡⟨ {!!} ⟩
-      c
-    ∎
-
 
    -- Lens structure.  -- TODO: define Contol.Lens
 
+  gets : ∀ {A B} → (A → B) → D A → B
+  gets {B = B} = traverse (Const B) {B = B}
+
   get : ∀ {A} → D A → A
-  get {A = A} = traverse (Const A) {B = A} id
+  get = gets id
 
   set : ∀ {A B} → B → D A → D B
   set b = dmap (λ _ → b)
+
+  -- Law: gets in terms of get.
+
+  gets=∘get : ∀ {A B} (f : A → B) →
+
+      gets f ≡ f ∘ get
+
+  gets=∘get {A = A}{B = B} f =
+    begin
+      gets f                     ≡⟨⟩
+      traverse (Const B) {B = B} f       ≡⟨ sym (traverse-free (Const A) (Const B) {! f!} {! KKNat f!} {! id !}) ⟩
+      f ∘ traverse (Const A) {B = A} id  ≡⟨⟩
+      f ∘ get
+    ∎
+
+  -- Constant traversal.
+
+  traverse-c :  ∀ {A B} (b : B) (l : D A) → B
+  traverse-c {B = B} b = traverse (Const B) {B = B} (λ _ → b)
+
+  -- Holds by parametricity (since type B is arbitrary and there is just one b : B given).
+
+  traverse-const : ∀ {A B} {b : B} (l : D A) →
+
+      traverse (Const B) (λ _ → b) l ≡ b
+
+  traverse-const {A = A} {B = B} {b = b} l =
+    begin
+      traverse (Const B) (λ _ → b) l                 ≡⟨ cong (λ z → z l) (gets=∘get (λ _ → b)) ⟩
+      ((λ _ → b) ∘ traverse (Const A) {B = B} id) l  ≡⟨⟩
+      b
+    ∎
 
   -- Lens laws.
 
@@ -117,12 +150,14 @@ record IsDecoration (D : Set → Set) : Set₁ where
 
 open IsDecoration
 
+
 -- Identity decoration.
 
 idIsDecoration : IsDecoration (λ A → A)
-traverse    idIsDecoration F! f  = f
-traverse-id idIsDecoration       = refl
-traverse-∘  idIsDecoration F! G! = refl
+traverse      idIsDecoration F! f         = f
+traverse-free idIsDecoration F! G! η η! f = refl
+traverse-id   idIsDecoration              = refl
+traverse-∘    idIsDecoration F! G!        = refl
 
 
 -- Decoration composition.
@@ -130,6 +165,15 @@ traverse-∘  idIsDecoration F! G! = refl
 _•_ : ∀ {D E} → IsDecoration D → IsDecoration E → IsDecoration (λ A → D (E A))
 
 traverse    (d • e) F f = traverse d F (traverse e F f)
+
+traverse-free (d • e) F G η η! f =
+  begin
+    η ∘ traverse (d • e) F f    ≡⟨⟩
+    η ∘ traverse d F (traverse e F f)    ≡⟨  traverse-free d F G η η! _ ⟩
+    traverse d G (η ∘ traverse e F f)    ≡⟨  cong (traverse d G) (traverse-free e F G η η! f) ⟩
+    traverse d G (traverse e G (η ∘ f))  ≡⟨⟩
+    traverse (d • e) G (η ∘ f)
+  ∎
 
 traverse-id (d • e) =
   begin
@@ -148,13 +192,26 @@ traverse-∘ (d • e) F G {f = f} {g = g} =
   ∎
   where FG = F · G
 
+
 -- The instance.
+
 
 decoration : ∀ {A} → IsDecoration (_×_ A)
 -- traverse decoration F f (a , x) = map F (_,_ a) (f x)           -- FAILS BUG WITH record pattern trans!!
-traverse decoration F f ax = map F (_,_ (proj₁ ax)) (f (proj₂ ax)) -- WORKS
-traverse-id decoration = refl
-traverse-∘  decoration F G {f = f} {g = g} = fun-ext λ ax → let (a , x) = ax in
+traverse      decoration F f ax              = map F (_,_ (proj₁ ax)) (f (proj₂ ax)) -- WORKS
+
+traverse-free decoration F G η η! f          =  fun-ext λ ax → let (a , x) = ax in
+  begin
+    (η ∘ traverse decoration F f) (a , x)  ≡⟨⟩
+    (η ∘ map F (_,_ a)) (f x)              ≡⟨  cong (λ z → z (f x)) (η! (_,_ a))  ⟩
+    (map G (_,_ a) ∘ η) (f x)              ≡⟨⟩
+    map G (_,_ a) (η (f x))                ≡⟨⟩
+    traverse decoration G (η ∘ f) (a , x)
+  ∎
+
+traverse-id   decoration                     = refl
+
+traverse-∘    decoration F G {f = f} {g = g} = fun-ext λ ax → let (a , x) = ax in
   begin
     traverse decoration FG (map F g ∘ f) (a , x)                        ≡⟨⟩
     map FG (_,_ a) (map F g (f x))                                      ≡⟨⟩
@@ -168,3 +225,4 @@ traverse-∘  decoration F G {f = f} {g = g} = fun-ext λ ax → let (a , x) = a
     (map F (traverse decoration G g) ∘ traverse decoration F f) (a , x)
   ∎
   where FG = F · G
+
