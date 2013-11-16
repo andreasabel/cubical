@@ -38,23 +38,34 @@ record NatTrans (F! G! : Functor) : Set₁ where
   open Functor G! using () renaming (F to G; map to mapG)
   field
 
-    eta    : ∀ {A} → F A → G A
+    eta        : ∀ {A} → F A → G A
 
-    square : ∀ {A B} (f : A → B) →
+    naturality : ∀ {A B} (f : A → B) →
 
         eta ∘ mapF f ≡ mapG f ∘ eta
+
+  -- To use naturality in applications:
+  postulate
+    app-naturality : ∀ {A : Set} {B C : A → Set}
+     (f : (x : A) → B x → C x)
+     (g : (x : A) → F (B x))
+     (x : A) →
+
+        eta (mapF (f x) (g x)) ≡ mapG (f x) (eta (g x))
+
+  -- app-naturality g f x = {!!}
 
 open NatTrans
 
 -- The identity natural transformation.
 
 Id : ∀ {F! : Functor} → NatTrans F! F!
-Id {F! = F!} = record { eta = λ x → x ; square = λ f → refl }
+Id {F! = F!} = record { eta = λ x → x ; naturality = λ f → refl }
 
 -- Natural transformations compose.
 
 Comp : ∀ {F! G! H! : Functor} → NatTrans F! G! → NatTrans G! H! → NatTrans F! H!
-Comp {F! = F!}{G! = G!}{H! = H!} n m = record { eta = nm ; square = snm }
+Comp {F! = F!}{G! = G!}{H! = H!} n m = record { eta = nm ; naturality = snm }
   where
     open Functor F! using () renaming (F to F; map to mapF)
     open Functor G! using () renaming (F to G; map to mapG)
@@ -69,11 +80,19 @@ Comp {F! = F!}{G! = G!}{H! = H!} n m = record { eta = nm ; square = snm }
 
     snm f = begin
         nm ∘ mapF f             ≡⟨⟩
-        eta m ∘ eta n ∘ mapF f  ≡⟨ cong (λ z → eta m ∘ z) (square n f) ⟩
-        eta m ∘ mapG f ∘ eta n  ≡⟨ cong (λ z → z ∘ eta n) (square m f) ⟩
+        eta m ∘ eta n ∘ mapF f  ≡⟨ cong (λ z → eta m ∘ z) (naturality n f) ⟩
+        eta m ∘ mapG f ∘ eta n  ≡⟨ cong (λ z → z ∘ eta n) (naturality m f) ⟩
         mapH f ∘ eta m ∘ eta n  ≡⟨⟩
         mapH f ∘ nm
       ∎
+
+-- Natural transformation between constant functors.
+
+ConstNat : ∀ {A B} (η : A → B) → NatTrans (Const A) (Const B)
+ConstNat η = record
+  { eta        = η
+  ; naturality = λ f → refl
+  }
 
 -- Functor category.
 

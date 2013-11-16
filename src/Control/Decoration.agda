@@ -77,9 +77,9 @@ record IsDecoration (D : Set → Set) : Set₁ where
       gets f
         ≡⟨⟩
       traverse (Const B) {B = B} f
+        ≡⟨ traverse-∘ (Const B) Id {g = f} ⟩
+      traverse (Const B) {B = A} f
         ≡⟨ sym (traverse-free (Const A) (Const B) f (KKNat f) id) ⟩
-      f ∘ traverse (Const A) {B = B} id
-        ≡⟨ cong (_∘_ f) (traverse-∘ (Const A) Id {f = id} {g = f}) ⟩
       f ∘ traverse (Const A) {B = A} id
         ≡⟨⟩
       f ∘ get
