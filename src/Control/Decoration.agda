@@ -6,7 +6,7 @@
 module Control.Decoration where
 
 open import Data.Product using (_×_; _,_; proj₁; proj₂)
-open import Function using (id; _∘_)
+open import Function using (id; _∘_; const)
 open import Relation.Binary.PropositionalEquality
 open ≡-Reasoning
 
@@ -65,7 +65,7 @@ record IsDecoration (D : Set → Set) : Set₁ where
   get = gets id
 
   set : ∀ {A B} → B → D A → D B
-  set b = dmap (λ _ → b)
+  set b = dmap (const b)
 
   -- Law: gets in terms of get.
   gets=∘get : ∀ {A B} (f : A → B) →
@@ -88,18 +88,18 @@ record IsDecoration (D : Set → Set) : Set₁ where
   -- Constant traversal.
 
   traverse-c :  ∀ {A B} (b : B) (l : D A) → B
-  traverse-c {B = B} b = traverse (Const B) {B = B} (λ _ → b)
+  traverse-c {B = B} b = traverse (Const B) {B = B} (const b)
 
   -- Holds by parametricity (since type B is arbitrary and there is just one b : B given).
 
   traverse-const : ∀ {A B} {b : B} (l : D A) →
 
-      traverse (Const B) (λ _ → b) l ≡ b
+      traverse (Const B) (const b) l ≡ b
 
   traverse-const {A = A} {B = B} {b = b} l =
     begin
-      traverse (Const B) (λ _ → b) l                 ≡⟨ cong (λ z → z l) (gets=∘get (λ _ → b)) ⟩
-      ((λ _ → b) ∘ traverse (Const A) {B = B} id) l  ≡⟨⟩
+      traverse (Const B) (const b) l               ≡⟨ cong (λ z → z l) (gets=∘get (const b)) ⟩
+      (const b ∘ traverse (Const A) {B = B} id) l  ≡⟨⟩
       b
     ∎
 
@@ -107,19 +107,21 @@ record IsDecoration (D : Set → Set) : Set₁ where
 
   -- 1. Get what you set.
 
-  get-set : ∀ {A} {a : A} (l : D A) →
+  get-set : ∀ {A} {a : A} →
 
-      get (set a l) ≡ a
+      get ∘ set {A = A} a ≡ const a
 
-  get-set {A = A} {a = a} l =
+  get-set {A = A} {a = a} =
     begin
-      get (set a l)                                               ≡⟨⟩
-      get (dmap (λ _ → a) l)                                      ≡⟨⟩
-      traverse (Const A) id (traverse Id (λ _ → a) l)             ≡⟨⟩
-      (map Id (traverse (Const A) id) ∘ traverse Id (λ _ → a)) l  ≡⟨  cong (λ z → z _) (sym (traverse-∘ Id (Const A)))  ⟩
-      traverse (Id · Const A) (map Id id ∘ (λ _ → a)) l           ≡⟨⟩
-      traverse (Const A) (λ _ → a) l                              ≡⟨ traverse-const _ ⟩
-      a
+      get ∘ set a                                             ≡⟨⟩
+      get ∘ dmap (const a)                                    ≡⟨⟩
+      traverse (Const A) id ∘ traverse Id (const a)           ≡⟨⟩
+      map Id (traverse (Const A) id) ∘ traverse Id (const a)  ≡⟨ sym (traverse-∘ Id (Const A)) ⟩
+      traverse (Id · Const A) (map Id id ∘ const a)           ≡⟨⟩
+      traverse (Const A) (const a)                            ≡⟨⟩
+      gets (const a)                                          ≡⟨ gets=∘get (const a) ⟩
+      const a ∘ get                                           ≡⟨⟩
+      const a
     ∎
 
   -- 2. Set what you got.
@@ -139,17 +141,17 @@ record IsDecoration (D : Set → Set) : Set₁ where
 
   -- 3. Set twice is set once.
 
-  set-set : ∀ {A} (a b : A) (l : D A) →
+  set-set : ∀ {A} (a b : A) →
 
-    set a (set b l) ≡ set a l
+    set a ∘ set {A = A} b  ≡  set a
 
-  set-set a b l =
+  set-set a b =
     begin
-      set a (set b l)                      ≡⟨⟩
-      (dmap (λ _ → a) ∘ dmap (λ _ → b)) l  ≡⟨ cong (λ z → z l) (sym dmap-∘)  ⟩
-      dmap ((λ _ → a) ∘ (λ _ → b)) l       ≡⟨⟩
-      dmap (λ _ → a) l                     ≡⟨⟩
-      set a l
+      set a ∘ set b                    ≡⟨⟩
+      dmap (const a) ∘ dmap (const b)  ≡⟨ sym dmap-∘ ⟩
+      dmap (const a ∘ const b)         ≡⟨⟩
+      dmap (const a)                   ≡⟨⟩
+      set a
     ∎
 
 open IsDecoration
