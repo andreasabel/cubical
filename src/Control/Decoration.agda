@@ -5,7 +5,7 @@
 
 module Control.Decoration where
 
-open import Data.Product using (_×_; _,_; proj₁; proj₂)
+open import Data.Product using (_×_; _,_; proj₁; proj₂; uncurry)
 open import Function using (id; _∘_; const)
 open import Relation.Binary.PropositionalEquality
 open ≡-Reasoning
@@ -13,6 +13,7 @@ open ≡-Reasoning
 open import Axiom.FunctionExtensionality
 open import Control.Functor hiding (Id; Const) renaming (idIsFunctor to Id; compIsFunctor to _·_; constIsFunctor to Const)
 open import Control.Functor.NaturalTransformation using (IsNatTrans; KKNat)
+open import Control.Comonad
 
 open IsFunctor -- {{...}} LOOPS
 
@@ -55,17 +56,65 @@ record IsDecoration (D : Set → Set) : Set₁ where
 
   open IsFunctor isFunctor using () renaming (map to dmap; map-∘ to dmap-∘)
 
+  -- Lens operations.
 
-   -- Lens structure.  -- TODO: define Contol.Lens
+  private
 
-  gets : ∀ {A B} → (A → B) → D A → B
-  gets {B = B} = traverse (Const B) {B = B}
+    gets : ∀ {A B} → (A → B) → D A → B
+    gets {B = B} = traverse (Const B) {B = B}
 
-  get : ∀ {A} → D A → A
-  get = gets id
+    get : ∀ {A} → D A → A
+    get = gets id
 
-  set : ∀ {A B} → B → D A → D B
-  set b = dmap (const b)
+    modify : ∀ {A B} → (A → B) → D A → D B
+    modify = dmap
+
+    set : ∀ {A B} → B → D A → D B
+    set b = dmap (const b)
+
+  -- Comonad structure.
+
+  isComonad : IsComonad D
+  isComonad = record
+    { extract  = extract
+    ; extend   = extend
+    ; extend-β = {!!}
+    ; extend-η = {!!}
+    ; extend-∘ = {!!}
+    }
+    where
+      extract : ∀ {A} → D A → A
+      extract {A = A} = get
+
+      extend : ∀ {A B} → (D A → B) → (D A → D B)
+      extend {A = A}{B = B} f x = set (f x) x
+--      extend {A = A}{B = B} f = uncurry set ∘ (λ x → f x , x)
+
+      -- The get-set law.
+
+      extend-β : ∀ {A B} (f : D A → B) → extract ∘ extend f ≡ f
+      extend-β {A = A}{B = B} f = begin
+        extract ∘ extend f                                     ≡⟨⟩
+        get ∘ (λ x → set (f x) x)                              ≡⟨⟩
+        traverse (Const B) id  ∘ (λ x → dmap (const (f x)) x)  ≡⟨⟩
+        (λ x → traverse (Const B) id (dmap (const (f x)) x))   ≡⟨⟩
+        (λ x → (traverse (Const B) id ∘ traverse Id (const (f x))) x)  ≡⟨ {! traverse-∘!} ⟩
+        (λ x → traverse (Const B) (const (f x)) x)                     ≡⟨ {!gets=∘get!} ⟩
+        (λ x → (const (f x) ∘ traverse (Const A) id) x)        ≡⟨⟩
+        (λ x → f x)                                            ≡⟨⟩
+        f                                                      ∎
+
+      -- The set-get law.
+
+      extend-η : ∀ {A} → extend {A = A} extract ≡ id
+      extend-η = begin
+         extend extract         ≡⟨⟩
+         (λ x → set (get x) x)  ≡⟨ {!!} ⟩
+         id ∎
+
+      -- The set-set law.
+
+   -- Lens structure.
 
   -- Law: gets in terms of get.
   gets=∘get : ∀ {A B} (f : A → B) →

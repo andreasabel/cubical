@@ -9,19 +9,19 @@ open ≡-Reasoning
 open import Axiom.FunctionExtensionality
 open import Control.Functor
 
-record IsComonad (M : Set → Set) : Set₁ where
+record IsComonad (W : Set → Set) : Set₁ where
 
   -- Methods.
 
   field
-    extract : ∀ {A  } → M A → A
-    extend  : ∀ {A B} → (M A → B) → M A → M B
+    extract : ∀ {A  } → W A → A
+    extend  : ∀ {A B} → (W A → B) → W A → W B
 
   -- Laws.
 
   field
 
-    extend-β : ∀ {A B} {k : M A → B} →
+    extend-β : ∀ {A B} {k : W A → B} →
 
       extract ∘ extend k ≡ k
 
@@ -29,24 +29,24 @@ record IsComonad (M : Set → Set) : Set₁ where
 
       extend {A = A} extract ≡ id
 
-    extend-∘ : ∀ {A B C} {k : M A → B} {l : M B → C} →
+    extend-∘ : ∀ {A B C} {k : W A → B} {l : W B → C} →
 
       extend (l ∘ extend k) ≡ extend l ∘ extend k
 
   -- Comonadic composition.
 
-  comComp : ∀ {A B C : Set} (l : M B → C) (k : M A → B) → (M A → C)
+  comComp : ∀ {A B C : Set} (l : W B → C) (k : W A → B) → (W A → C)
   comComp l k = l ∘ extend k
 
   -- Functoriality.
 
-  isFunctor : IsFunctor M
+  isFunctor : IsFunctor W
   isFunctor = record
     { ops  = record { map = map  }
     ; laws = record { map-id = extend-η ; map-∘ = λ {A B C f g} → sym (map-∘-sym f g) }
     }
     where
-      map : ∀ {A B} → (A → B) → M A → M B
+      map : ∀ {A B} → (A → B) → W A → W B
       map f = extend (f ∘ extract)
 
       map-∘-sym : ∀ {A B C} (f : A → B) (g : B → C) → map g ∘ map f ≡ map (g ∘ f)
@@ -63,7 +63,7 @@ record IsComonad (M : Set → Set) : Set₁ where
 
 record Comonad : Set₁ where
   field
-    M  : Set → Set
-    M! : IsComonad M
+    W  : Set → Set
+    W! : IsComonad W
 
-  open IsComonad M! public
+  open IsComonad W! public
