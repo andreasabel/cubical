@@ -30,7 +30,7 @@ record MonadOps (M : Set → Set) : Set₁ where
 
   functorOps : FunctorOps M
   functorOps = record
-    { _<$>_ = λ f m → m >>= λ a → return (f a)
+    { map = λ f m → m >>= λ a → return (f a)
     }
 
   open FunctorOps functorOps public
@@ -119,21 +119,17 @@ record MonadLaws {M : Set → Set} (ops : MonadOps M) : Set₁ where
   private
     abstract
       map-comp : T-map-∘
-      map-comp {f = f} {g = g} m = begin
-          g ∘ f <$> m
-        ≡⟨⟩
-          (m >>= λ a → return (g (f a)))
-        ≡⟨ cong (_>>=_ m) (sym (bind-β-ext _ _)) ⟩
-          (m >>= λ a → return (f a) >>= λ b → return (g b))
-        ≡⟨ sym (bind-assoc m) ⟩
-          (m >>= λ a → return (f a)) >>= (λ b → return (g b))
-        ≡⟨⟩
+      map-comp {f = f} {g = g} = fun-ext λ m → begin
+          g ∘ f <$> m                                          ≡⟨⟩
+          (m >>= λ a → return (g (f a)))                       ≡⟨ cong (_>>=_ m) (sym (bind-β-ext _ _)) ⟩
+          (m >>= λ a → return (f a) >>= λ b → return (g b))    ≡⟨ sym (bind-assoc m) ⟩
+          (m >>= λ a → return (f a)) >>= (λ b → return (g b))  ≡⟨⟩
           g <$> f <$> m
         ∎
 
   functorLaws : FunctorLaws functorOps
   functorLaws = record
-    { map-id = bind-η
+    { map-id = fun-ext bind-η
     ; map-∘  = map-comp
     }
 
