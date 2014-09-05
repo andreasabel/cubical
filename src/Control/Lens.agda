@@ -5,6 +5,8 @@ open import Relation.Binary.PropositionalEquality
 open ≡-Reasoning
 
 open import Axiom.FunctionExtensionality
+open import Util.Equality
+
 open import Control.Functor renaming (Comp to _•_)
 open import Control.Functor.NaturalTransformation renaming (Id to Nid; Comp to _·_)
 
@@ -17,9 +19,6 @@ apply f g a = f a (g a)
 
 flipply : ∀ {O A B : Set} → (A → O → B) → (O → A) → O → B
 flipply f g o = f (g o) o
-
-app-≡ : ∀ {A : Set} {B : A → Set} {f g : (x : A) → B x} (x : A) → f ≡ g → f x ≡ g x
-app-≡ x refl = refl
 
 record GetSetLens (O I : Set) : Set where
 

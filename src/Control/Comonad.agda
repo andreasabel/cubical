@@ -62,8 +62,15 @@ record IsComonad (W : Set → Set) : Set₁ where
 -- Monads in Kleisli Triple presentation.
 
 record Comonad : Set₁ where
+  constructor comonad
   field
     W  : Set → Set
     W! : IsComonad W
 
   open IsComonad W! public
+
+-- Casting a Comonad to a Functor
+
+FunctorOfComonad : Comonad → Functor
+FunctorOfComonad WW = functor W isFunctor
+  where open Comonad WW
