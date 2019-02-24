@@ -1,3 +1,5 @@
+{-# OPTIONS --allow-unsolved-metas #-}
+
 module Control.Lens where
 
 open import Function using (id; _∘_; const; flip)

@@ -40,7 +40,7 @@ module PreProduct {o h e} {C : Category o h e} {A B : obj C} where
   -- is a morphism ⟨f,g⟩ : X ⇒ A×B such that fst ∘ ⟨f,g⟩ ≡ f
   -- and snd ∘ ⟨f,g⟩ ≡ g.
 
-  record IsPair (P : Obj) {X} (f : X ⇒ A) (g : X ⇒ B) (⟨f,g⟩ : X ⇒ A×B◃ P)
+  record IsPair (P : Obj) {X} (f : X ⇒ A) (g : X ⇒ B) (⟨f,g⟩ : X ⇒ (A×B◃ P))
       : Set (o ⊔ h ⊔ e)
     where
     constructor β-pair

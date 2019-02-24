@@ -5,6 +5,7 @@ module Control.Functor.NaturalTransformation where
 open import Function using (id; _∘_)
 open import Relation.Binary
 open import Relation.Binary.PropositionalEquality
+  using (_≡_; refl; sym; trans; cong; cong₂; module ≡-Reasoning)
 open ≡-Reasoning
 
 open import Control.Functor using (Functor; module Functor; Const)
@@ -122,4 +123,3 @@ FUNCTOR = record
       ; ∘-cong   = λ n≡n' m≡m' → cong₂ (λ m n x → m (n x)) m≡m' n≡n' }
     }
   }
-

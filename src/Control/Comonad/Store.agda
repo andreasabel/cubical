@@ -7,6 +7,7 @@ module Control.Comonad.Store where
 
 open import Function using (id) renaming (_∘′_ to _∘_)
 open import Relation.Binary.PropositionalEquality
+  using (_≡_; refl; sym; trans; cong; cong₂; module ≡-Reasoning)
 open ≡-Reasoning
 
 open import Axiom.FunctionExtensionality
@@ -142,12 +143,12 @@ storeId {I = I}{O = O} (store v i) = begin
   store (v ∘ id) i                                               ≡⟨⟩
   store v i ∎
 
--- BAD IDEA: the proof of modifier-free should not be compared with ≡
+-- -- BAD IDEA: the proof of modifier-free should not be compared with ≡
 
-lstoreId : ∀ {I O} (l : LStore I O) → storeToLStore (lstoreToStore l) ≡ l
-lstoreId {I = I}{O = O} l = begin
-   storeToLStore (lstoreToStore l)             ≡⟨⟩
-   storeToLStore (modifier (StoreF I) idLens)  ≡⟨⟩
-   storeToLStore (modifier (StoreF I) idLens)  ≡⟨ {!!} ⟩
-   l                                           ∎
-  where open LStore l
+-- lstoreId : ∀ {I O} (l : LStore I O) → storeToLStore (lstoreToStore l) ≡ l
+-- lstoreId {I = I}{O = O} l = begin
+--    storeToLStore (lstoreToStore l)             ≡⟨⟩
+--    storeToLStore (modifier (StoreF I) idLens)  ≡⟨⟩
+--    storeToLStore (modifier (StoreF I) idLens)  ≡⟨ {!!} ⟩
+--    l                                           ∎
+--   where open LStore l

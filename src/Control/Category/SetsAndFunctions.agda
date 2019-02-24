@@ -4,6 +4,7 @@ module Control.Category.SetsAndFunctions where
 
 open import Level using (zero; suc; _⊔_)
 open import Relation.Binary.PropositionalEquality
+open import Relation.Binary
 open import Data.Product
 
 open import Axiom.FunctionExtensionality
@@ -13,8 +14,8 @@ open import Control.Category.Product
 
 -- Category SET
 
-Functions : Set → Set → Set
-Functions A B = A → B
+Functions : Set → Set → Setoid _ _
+Functions A B = setoid (A → B)
 
 setIsCategory : IsCategory Functions
 setIsCategory = record
@@ -26,13 +27,14 @@ setIsCategory = record
     { id-first = refl
     ; id-last  = refl
     ; ∘-assoc  = λ f → refl
+    ; ∘-cong   = λ{ refl refl → refl }
     }
   }
 
-SET : Category _ _
-SET = record { _⇒_ = Functions; isCategory = setIsCategory }
+SET : Category _ _ _
+SET = record { Hom = Functions; isCategory = setIsCategory }
 
-
+{-
 timesProductStructure : (A B : Set) → ProductStructure SET A B
 timesProductStructure A B = record
   { A×B = A × B
@@ -65,3 +67,5 @@ timesIsProduct A B = record
   { productStructure = timesProductStructure A B
   ; isProduct = record { pair = pairPair }
   }
+
+-- -}

@@ -1,5 +1,5 @@
 
-module Soundness where
+module Dimension.PartialWeakening.Soundness where
 
   open import Exception -- using (Except; left; right; _<$>_; _>>=_)
   open import Injective
@@ -114,4 +114,3 @@ module Soundness where
       apply (lift f) i >>= (λ j → suc <$> apply g j)
     ∎
   apply-comp (weak f) g i = {!!}
-

@@ -1,4 +1,5 @@
 {-# OPTIONS --copatterns #-}
+{-# OPTIONS --allow-unsolved-metas #-}
 -- {-# OPTIONS --show-implicit #-}
 
 -- One-place functors (decorations) on Set
@@ -280,4 +281,3 @@ traverse-∘    decoration F G {f = f} {g = g} = fun-ext λ ax → let (a , x) =
     (map F (traverse decoration G g) ∘ traverse decoration F f) (a , x)
   ∎
   where FG = F · G
-
