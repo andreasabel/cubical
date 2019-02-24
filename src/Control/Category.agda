@@ -1,3 +1,5 @@
+{-# OPTIONS --without-K #-}
+
 module Control.Category where
 
 open import Level using (suc; _⊔_)
@@ -131,4 +133,3 @@ record IsFinal {o h e} {Obj : Set o} (Hom : Obj → Obj → Setoid h e) (Final :
   field
     final           : ∀ {A}                 → A ⇒ Final
     final-universal : ∀ {A} {f : A ⇒ Final} → f ≈ final
-

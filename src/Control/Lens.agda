@@ -219,26 +219,13 @@ lensFromGetSet {O = O}{I = I} l = record
       derivation-of-modify : ∀ f → modify! f ≡ apply (map ∘ flip set) (f ∘ get)
       derivation-of-modify f = begin
         modify! f
-        ≡⟨⟩  (λ o → map (λ i → set i o) (f (get o)))
+        ≡⟨⟩  (λ o → f (get o) <&> λ i → set i o)
         ≡⟨⟩  (λ o → ((λ o → map (λ i → set i o)) o) ((f ∘ get) o))
         ≡⟨⟩  apply (λ o → map (λ i → set i o)) (f ∘ get)
         ≡⟨⟩  apply (λ o → map (flip set o)) (f ∘ get)
         ≡⟨⟩  apply (map ∘ flip set) (f ∘ get)
         ∎
     open Define-modify!
-
-{-
-    modify! FF f = apply (map ∘ flip set) (f ∘ get)
-      where open Functor FF
-      modify! :  ∀ (FF : Functor) → let F = Functor.F FF in
-        (I → F I) → (O → F O)
-    -- modify! FF f o = map (λ i → set i o) (f (get o))
-    -- modify! FF f = λ o → ((λ o → map (λ i → set i o)) o) ((f ∘ get) o)
-    -- modify! FF f = apply (λ o → map (λ i → set i o)) (f ∘ get)
-    -- modify! FF f = apply (λ o → map (flip set o)) (f ∘ get)
-    modify! FF f = apply (map ∘ flip set) (f ∘ get)
-      where open Functor FF
--}
 
     modify!-free : (FF GG : Functor) (N : NatTrans FF GG) →
 

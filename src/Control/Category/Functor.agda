@@ -13,7 +13,7 @@ open Category using () renaming (Obj to obj; Hom to hom)
 
 module T-FunctorOps
   {co ch ce} (C : Category co ch ce)
-  {do dh de} (D : Category do dh de)
+  {δo dh de} (D : Category δo dh de)
              (F : obj C → obj D)
   where
   open HomSet (hom C) using (_⇒_)
@@ -25,7 +25,7 @@ module T-FunctorOps
 
 record FunctorOps
   {co ch ce} (C : Category co ch ce)
-  {do dh de} (D : Category do dh de) (F : obj C → obj D) : Set (co ⊔ ch ⊔ ce ⊔ do ⊔ dh ⊔ de)
+  {δo dh de} (D : Category δo dh de) (F : obj C → obj D) : Set (co ⊔ ch ⊔ ce ⊔ δo ⊔ dh ⊔ de)
   where
   open T-FunctorOps C D F
 
@@ -38,7 +38,7 @@ record FunctorOps
 
 module T-FunctorLaws
   {co ch ce} {C : Category co ch ce}
-  {do dh de} {D : Category do dh de} {F : obj C → obj D}
+  {δo dh de} {D : Category δo dh de} {F : obj C → obj D}
   (ops : FunctorOps C D F) where
 
   open FunctorOps ops public
@@ -62,8 +62,8 @@ module T-FunctorLaws
 
 record FunctorLaws
   {co ch ce} {C : Category co ch ce}
-  {do dh de} {D : Category do dh de} {F : obj C → obj D}
-  (ops : FunctorOps C D F) : Set ((co ⊔ ch ⊔ ce ⊔ do ⊔ dh ⊔ de)) where
+  {δo dh de} {D : Category δo dh de} {F : obj C → obj D}
+  (ops : FunctorOps C D F) : Set ((co ⊔ ch ⊔ ce ⊔ δo ⊔ dh ⊔ de)) where
   open T-FunctorLaws ops
 
   field
@@ -75,7 +75,7 @@ record FunctorLaws
 
 record IsFunctor
   {co ch ce} {C : Category co ch ce}
-  {do dh de} {D : Category do dh de} (F : obj C → obj D) : Set (co ⊔ ch ⊔ ce ⊔ do ⊔ dh ⊔ de) where
+  {δo dh de} {D : Category δo dh de} (F : obj C → obj D) : Set (co ⊔ ch ⊔ ce ⊔ δo ⊔ dh ⊔ de) where
 
   field
     ops  : FunctorOps  C D F
@@ -84,3 +84,4 @@ record IsFunctor
   open FunctorOps  ops  public
   open FunctorLaws laws public
 
+-- -}

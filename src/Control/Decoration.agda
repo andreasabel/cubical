@@ -1,5 +1,5 @@
 {-# OPTIONS --copatterns #-}
-{-# OPTIONS --show-implicit #-}
+-- {-# OPTIONS --show-implicit #-}
 
 -- One-place functors (decorations) on Set
 
@@ -15,7 +15,7 @@ open import Control.Functor hiding (Id; Const) renaming (idIsFunctor to Id; comp
 open import Control.Functor.NaturalTransformation using (IsNatTrans; KKNat)
 open import Control.Comonad
 
-open IsFunctor -- {{...}} LOOPS
+open IsFunctor
 
 record IsDecoration (D : Set → Set) : Set₁ where
   field
@@ -78,8 +78,8 @@ record IsDecoration (D : Set → Set) : Set₁ where
   isComonad = record
     { extract  = extract
     ; extend   = extend
-    ; extend-β = {!!}
-    ; extend-η = {!!}
+    ; extend-β = extend-β _
+    ; extend-η = extend-η
     ; extend-∘ = {!!}
     }
     where

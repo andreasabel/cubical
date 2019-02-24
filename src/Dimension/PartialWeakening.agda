@@ -112,7 +112,9 @@ open Laws
 
 -- PWeak is a category with initial object
 
-pWeakIsCategory : IsCategory PWeak
+SPWeak = λ n m → setoid (PWeak n m)
+
+pWeakIsCategory : IsCategory SPWeak
 pWeakIsCategory = record
   { ops  = record
     { id  = id
@@ -122,10 +124,12 @@ pWeakIsCategory = record
     { id-first = left-id _
     ; id-last  = right-id _
     ; ∘-assoc  = λ f → assoc f _ _
+    ; ∘-cong   = cong₂ comp
     }
   }
 
-emptyIsInitial : IsInitial PWeak 0
+
+emptyIsInitial : IsInitial SPWeak 0
 emptyIsInitial = record
   { initial = empty
   ; initial-universal = empty-extensional _
@@ -133,5 +137,8 @@ emptyIsInitial = record
 
 -- The category PWEAK
 
-PWEAK : Category _ _
-PWEAK = record { Mor = PWeak; isCategory = pWeakIsCategory }
+PWEAK : Category _ _ _
+PWEAK = record { Hom = SPWeak; isCategory = pWeakIsCategory }
+
+
+-- -}

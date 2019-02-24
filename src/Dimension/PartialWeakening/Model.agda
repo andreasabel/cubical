@@ -144,7 +144,9 @@ abstract
 PFin : (n m : ℕ) → Set
 PFin n m = Fin n → Error (Fin m)
 
-pFinIsCategory : IsCategory PFin
+SPFin = λ n m → setoid (PFin n m)
+
+pFinIsCategory : IsCategory SPFin
 pFinIsCategory = record
   { ops = record
     { id  = return
@@ -154,11 +156,12 @@ pFinIsCategory = record
     { id-first = fun-ext (bind-β _)
     ; id-last  = fun-ext (λ a → bind-η _)
     ; ∘-assoc  = λ f → fun-ext (λ a → bind-assoc (f a))
+    ; ∘-cong   = λ{ refl refl → refl }
     }
   }
 
-PFIN : Category _ _
-PFIN = record { Mor = PFin; isCategory = pFinIsCategory }
+PFIN : Category _ _ _
+PFIN = record { Hom = SPFin; isCategory = pFinIsCategory }
 
 -- The evaluation functor
 
@@ -175,4 +178,3 @@ applyIsFunctor = record
     ; map-∘  = λ f → fun-ext (apply-comp f _)
     }
   }
-
