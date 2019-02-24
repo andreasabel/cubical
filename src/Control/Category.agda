@@ -6,6 +6,10 @@ open import Level using (suc; _⊔_)
 open import Relation.Binary hiding (_⇒_)
 open import Relation.Binary.PropositionalEquality
 
+-- Module HomSet provides notation A ⇒ B for the Set of morphisms
+-- from between objects A and B and names _≈_ and ≈-refl/sym/trans
+-- for the equality of morphisms.
+
 module HomSet {o h e} {Obj : Set o} (Hom : Obj → Obj → Setoid h e) where
 
   _⇒_ : (A B : Obj) → Set h
@@ -38,6 +42,9 @@ module HomSet {o h e} {Obj : Set o} (Hom : Obj → Obj → Setoid h e) where
 
 -- Category operations: identity and composition.
 
+-- Module T-CategoryOps Hom provides the types of
+-- identity and composition (forward and backward).
+
 module T-CategoryOps {o h e} {Obj : Set o} (Hom : Obj → Obj → Setoid h e) where
 
   open HomSet Hom
@@ -45,6 +52,9 @@ module T-CategoryOps {o h e} {Obj : Set o} (Hom : Obj → Obj → Setoid h e) wh
   T-id = ∀ {A}                            → A ⇒ A
   T-⟫  = ∀ {A B C} (f : A ⇒ B) (g : B ⇒ C) → A ⇒ C
   T-∘  = ∀ {A B C} (g : B ⇒ C) (f : A ⇒ B) → A ⇒ C
+
+-- Record CategoryOps Hom can be instantiated to implement
+-- identity and composition for category Hom.
 
 record CategoryOps {o h e} {Obj : Set o} (Hom : Obj → Obj → Setoid h e)
     : Set (o ⊔ h ⊔ e)
@@ -62,6 +72,9 @@ record CategoryOps {o h e} {Obj : Set o} (Hom : Obj → Obj → Setoid h e)
   g ∘ f = f ⟫ g
 
 -- Category laws: left and right identity and composition.
+
+-- Module T-CategoryLaws ops provides the types of the laws
+-- for the category operations ops.
 
 module T-CategoryLaws {o h e} {Obj : Set o} {Hom : Obj → Obj → Setoid h e}
     (ops : CategoryOps Hom)
@@ -85,6 +98,9 @@ module T-CategoryLaws {o h e} {Obj : Set o} {Hom : Obj → Obj → Setoid h e}
   T-∘-cong = ∀ {A B C} {f f′ : A ⇒ B} {g g′ : B ⇒ C} →
     f ≈ f′ → g ≈ g′ → (f ⟫ g) ≈ (f′ ⟫ g′)
 
+-- Record CategoryLaws ops can be instantiated to prove the laws of the
+-- category operations (identity and compositions).
+
 record CategoryLaws {o h e} {Obj : Set o} {Hom : Obj → Obj → Setoid h e}
     (ops : CategoryOps Hom) : Set (o ⊔ h ⊔ e)
   where
@@ -95,6 +111,9 @@ record CategoryLaws {o h e} {Obj : Set o} {Hom : Obj → Obj → Setoid h e}
     id-last  : T-id-last
     ∘-assoc  : T-∘-assoc
     ∘-cong   : T-∘-cong
+
+-- Record IsCategory Hom contains the data (operations and laws) to make
+-- Hom a category.
 
 record IsCategory {o h e} {Obj : Set o} (Hom : Obj → Obj → Setoid h e) : Set (o ⊔ h ⊔ e) where
 

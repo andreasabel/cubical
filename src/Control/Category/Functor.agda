@@ -11,6 +11,10 @@ open Category using () renaming (Obj to obj; Hom to hom)
 
 -- Operations of a functor.
 
+-- Module T-FunctorOps C D F provides notation A ⇒ A' for homset C(A,A')
+-- and notation B ⇉ B' for homset D(B,B') and the type T-map for the
+-- functorial action.
+
 module T-FunctorOps
   {co ch ce} (C : Category co ch ce)
   {δo dh de} (D : Category δo dh de)
@@ -22,6 +26,8 @@ module T-FunctorOps
   -- Type of the map function.
   T-map = ∀ {A B} → (A ⇒ B) → F A ⇉ F B
 
+-- Record FunctorOps C D F can be instantiated to define the functorial action
+-- map of F.
 
 record FunctorOps
   {co ch ce} (C : Category co ch ce)
@@ -35,6 +41,8 @@ record FunctorOps
 
 
 -- Laws of a functor.
+
+-- Module T-FunctorLaws ops provides notation...
 
 module T-FunctorLaws
   {co ch ce} {C : Category co ch ce}
